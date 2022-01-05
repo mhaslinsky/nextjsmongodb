@@ -1,38 +1,17 @@
 import { Fragment } from "react/cjs/react.production.min";
 import { useRouter } from "next/router";
 import MeetupDetail from "../components/meetups/MeetupDetail";
+import { MongoClient, ObjectId } from "mongodb";
 
-const DUMMY_DATA = [
-  {
-    id: "m1",
-    image:
-      "https://images.unsplash.com/photo-1568904924166-1dec5d529cb1?ixlib=rb-1.2.1&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1548&q=80",
-    title: "Sydney Opera House",
-    address: "123 Australia St",
-    description: "First MEETUP!",
-  },
-  {
-    id: "m2",
-    image:
-      "https://images.unsplash.com/photo-1640693939691-06d05136becd?ixlib=rb-1.2.1&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=838&q=80",
-    title: "Europe House",
-    address: "123 Europe St",
-    description: "Second MEETUP!",
-  },
-];
-
-function MeetupDetails() {
-  const router = useRouter();
-
-  const result = DUMMY_DATA.find(({ id }) => id === router.query.meetupID);
-
+function MeetupDetails(props) {
+  console.log(props.meetupData);
   return (
     <Fragment>
       <MeetupDetail
-        image={result.image}
-        title={result.title}
-        address={result.address}
-        description={result.description}
+        image={props.meetupData.image}
+        title={props.meetupData.title}
+        address={props.meetupData.address}
+        description={props.meetupData.description}
       />
     </Fragment>
   );
@@ -42,36 +21,45 @@ export async function getStaticProps(context) {
   //fetch data from API
   const meetupID = context.params.meetupID;
 
+  const client = await MongoClient.connect(
+    `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.37zg8.mongodb.net/meetups?retryWrites=true&w=majority`
+  );
+  const db = client.db();
+  const meetupsCollection = db.collection("meetups");
+  const selectedMeetup = await meetupsCollection.findOne({
+    _id: ObjectId(meetupID),
+  });
+  client.close();
+
   return {
     props: {
-      meetupData: [
-        {
-          id: "m1",
-          image:
-            "https://images.unsplash.com/photo-1568904924166-1dec5d529cb1?ixlib=rb-1.2.1&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1548&q=80",
-          title: "Sydney Opera House",
-          address: "123 Australia St",
-          description: "First MEETUP!",
-        },
-        {
-          id: "m2",
-          image:
-            "https://images.unsplash.com/photo-1640693939691-06d05136becd?ixlib=rb-1.2.1&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=838&q=80",
-          title: "Europe House",
-          address: "123 Europe St",
-          description: "Second MEETUP!",
-        },
-      ],
+      meetupData: {
+        id: selectedMeetup._id.toString(),
+        title: selectedMeetup.title,
+        image: selectedMeetup.image,
+        address: selectedMeetup.address,
+        description: selectedMeetup.description,
+      },
     },
-    revalidate: 60,
   };
 }
 
 export async function getStaticPaths() {
   //lets NextJS know all possible paths to generate
+  const client = await MongoClient.connect(
+    `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.37zg8.mongodb.net/meetups?retryWrites=true&w=majority`
+  );
+  const db = client.db();
+  const meetupsCollection = db.collection("meetups");
+  const meetups = await meetupsCollection.find({}, { _id: 1 }).toArray();
+  client.close();
+
   return {
     fallback: false,
-    paths: [{ params: { meetupID: "m1" } }, { params: { meetupID: "m2" } }],
+    paths: meetups.map((meetup) => ({
+      params: { meetupID: meetup._id.toString() },
+    })),
+    // paths: [{ params: { meetupID: "m1" } }, { params: { meetupID: "m2" } }],
   };
 }
 
