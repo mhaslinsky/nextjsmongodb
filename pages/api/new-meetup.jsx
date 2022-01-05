@@ -12,7 +12,7 @@ async function Handler(req, res) {
     //const { title, image, address, description } = data;
 
     const client = await MongoClient.connect(
-      "mongodb+srv://mhaslinsky:pwBynA1m5JYhCmO8@cluster0.37zg8.mongodb.net/meetups?retryWrites=true&w=majority"
+      `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.37zg8.mongodb.net/meetups?retryWrites=true&w=majority`
     );
     const db = client.db();
     const meetupsCollection = db.collection("meetups");
