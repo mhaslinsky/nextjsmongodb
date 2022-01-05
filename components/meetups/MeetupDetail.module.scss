@@ -1,0 +1,11 @@
+.details {
+  text-align: center;
+  backdrop-filter: blur(2px);
+
+  padding: 1rem;
+  border-radius: 1rem;
+  box-shadow: 2px 2px 4px rgba(0, 0, 0, 0.329);
+  img {
+    width: 100%;
+  }
+}
