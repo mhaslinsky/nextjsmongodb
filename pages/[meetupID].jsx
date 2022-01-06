@@ -1,12 +1,16 @@
 import { Fragment } from "react/cjs/react.production.min";
-import { useRouter } from "next/router";
 import MeetupDetail from "../components/meetups/MeetupDetail";
 import { MongoClient, ObjectId } from "mongodb";
+import Head from "next/dist/next-server/lib/head";
 
 function MeetupDetails(props) {
   console.log(props.meetupData);
   return (
     <Fragment>
+      <Head>
+        <title>{props.meetupData.title}</title>
+        <meta name='description' content={props.meetupData.description} />
+      </Head>
       <MeetupDetail
         image={props.meetupData.image}
         title={props.meetupData.title}
@@ -59,7 +63,6 @@ export async function getStaticPaths() {
     paths: meetups.map((meetup) => ({
       params: { meetupID: meetup._id.toString() },
     })),
-    // paths: [{ params: { meetupID: "m1" } }, { params: { meetupID: "m2" } }],
   };
 }
 
